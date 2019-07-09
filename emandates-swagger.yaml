@@ -45,7 +45,7 @@ tags:
   - name: Integration Steps
     description: |-
       REST API integration is the most flexible way to integrate with the E-Mandate platform, 
-      * It allows you to prepopulate your payer’s details on the mandate form. 
+      * It allows you to prepopulate your payerâ€™s details on the mandate form. 
       * It also offers real time feedback into your own (Merchant) system when a mandate is signed.
 
       The following models describe typical integration scenarios with the E-Mandate platform, allowing you to capture signed mandates from your payers.
