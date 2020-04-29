@@ -45,7 +45,7 @@ tags:
   - name: Integration Steps
     description: |-
       REST API integration is the most flexible way to integrate with the E-Mandate platform, 
-      * It allows you to prepopulate your payerâ€™s details on the mandate form. 
+      * It allows you to prepopulate your payer's details on the mandate form. 
       * It also offers real time feedback into your own (Merchant) system when a mandate is signed.
 
       The following models describe typical integration scenarios with the E-Mandate platform, allowing you to capture signed mandates from your payers.
@@ -70,10 +70,10 @@ tags:
 
       <!-- A note on IDs: All IDs used in URIs are encoded. IDs used in request bodies are unencoded. -->
 
-      To view all available Nuapay REST endpoints, see the [Resources](#resources) sections below.
+      To view all available Nuapay REST endpoints, see the [Resources](#tag/Resources-Envelope).
   - name: Authentication
     description: |-
-      The E-Mandates API is protected with a unique identifier in the request header, the Token. This token identifies a sppecific merchant and allows any payer details (linked to that merchant) to be gathered when a mandate is created. 
+      The E-Mandates API is protected with a unique identifier in the request header, the Token. This token identifies a specific merchant and allows any payer details (linked to that merchant) to be gathered when a mandate is created. 
 
       To get a token you call Prepare E-Mandate with your API key. Once you have the token you can call all of the endpoints related to E-Mandate processing (the conversation endpoints). 
 
@@ -115,7 +115,7 @@ tags:
       -H 'Token: 42b0fd59-b196-4501-bccb-56481dde6900'`
       ```
 
-      > Make sure to replace `42b0fd59...` with your API key.
+      > Make sure to replace `42b0fd59...` with your conversation token.
       <br>
   - name: Output Encoding Rules
     description: |-
@@ -259,6 +259,83 @@ tags:
       The current version of the Nuapay API is version 1.0. Changes may occur to this version of the API without a version number update. Any changes that do not require a new API version follow our backward compatibility guidelines. Different versions will be managed via a HTTP header indicating the version of the API that the client is using.
 
       Requests with no version number or an unmatched version number will be treated as version 1.0 requests.
+  - name: Resources Envelope
+    description: |-
+      
+      > Example GET response
+
+      ```http
+      HTTP/1.1 200 OK
+      Content-Type: application/json;charset=UTF-8
+      Content-Length: 404
+
+      {
+        "uri" : "/verify",
+        "data" : {
+          "uri" : "/verify",
+          "debtorDetails" : {
+            "email" : "debtor@email.com"
+          },
+          "merchantDetails" : {
+            "name" : "Creditor Name",
+            "address" : {
+              "line1" : "Address Line 1",
+              "line2" : "Address Line 2",
+              "town" : "Town",
+              "postCode" : "123123",
+              "country" : "IE"
+            },
+            "schemeType" : "CORE"
+          }
+        }
+      }
+      ```
+
+      All resources returned by endpoints are contained within a resource envelope.
+
+      The JSON envelope has the following structure:
+
+      JSON Path | Type | Description
+      ---- | ---- | -----------
+      uri | String | Resource URI
+      data.uri | String  | Resource URI
+      data.* |  | Resource content
+  - name: Links
+    description: |-
+      
+      > Example Link array,
+      
+      ```json
+      {
+        "links": [
+          {
+            "resourceType": "balances",
+            "id": null,
+            "uri": "/accounts/cdxt17zj1l/balances"
+          },
+          {
+            "resourceType": "beneficiary",
+            "id": "j29pkqiaby",
+            "uri": "/beneficiaries/j29pkqiaby"
+          }      
+        ]
+      }
+      ```
+      
+      'Links' referrs to an array that can appear in the endpoint response contaning the ID and URI of linked resources. 
+      
+      Where no linked resources exists the 'Links' will be presented as an empty array.
+      
+      The link array has the following structure:
+      
+      JSON Path | Type | Description
+      ---- | ---- | -----------
+      links.resourceType | String<em>enum</em> | The type of the linked resource, relevant types will be defined in the endpoint object(s)
+      links.id | String  | ID of the linked resource
+      links.uri | String | URI of the linked resource
+  - name: Contracts Overview
+    description: |-
+      Contract APIs are optional and are to be used if Merchant wants to sign the Contract together with E-Mandate.
   - name: Changelog
     description: |-
       ## 2018-05-04
@@ -291,12 +368,17 @@ x-tagGroups:
   - name: Security
     tags:
       - Output Encoding Rules
-  - name: Contracts
+  - name: Resources
     tags:
-      - EMandates-Contracts
+      - Resources Envelope 
+      - Links   
   - name: E-Mandates
     tags:
-      - EMandates-API
+      - E-Mandates
+  - name: Contracts
+    tags:
+      - Contracts Overview
+      - EMandates-Contracts
   - name: E-Mandates Conversation Steps
     tags:
       - EMandates-Conversation
@@ -317,7 +399,7 @@ x-tagGroups:
     tags:
       - Changelog
 schemes:
-  - http
+  - https
 paths:
   /contracts:
     post:
@@ -1238,7 +1320,7 @@ paths:
   /emandates:
     post:
       tags:
-        - EMandates-API
+        - E-Mandates
       summary: Prepare E-mandate
       description: A POST request used to generate the E-Mandate session ID (token) and prepopulate merchant and payer details for the E-Mandate.
       operationId: prepareMandateUsingPOST
@@ -1322,7 +1404,7 @@ paths:
   /emandates/{conversationToken}:
     get:
       tags:
-        - EMandates-API
+        - E-Mandates
       summary: Prepare E-mandate
       description: A GET request used to retrieve the prepared e-mandate based on the generated token.
       operationId: viewMandateUsingGET
@@ -1422,7 +1504,7 @@ paths:
   /prepare/{emailToken}:
     post:
       tags:
-        - EMandates-API
+        - E-Mandates
       summary: Prepare Conversation
       description: A POST request used to start a conversation with an emailToken. emailToken token is part of the link sent as part of the eMail flow.
       operationId: preparePostUsingPOST
@@ -1686,27 +1768,25 @@ definitions:
     properties:
       country:
         type: string
-        minLength: 0
+        minLength: 2
         maxLength: 2
         description: Country ISO Code
       line1:
         type: string
-        minLength: 0
+        minLength: 1
         maxLength: 70
         description: Address Line 1
       line2:
         type: string
-        minLength: 0
         maxLength: 70
         description: Address Line 2
       postCode:
         type: string
-        minLength: 0
         maxLength: 16
         description: Post Code
       town:
         type: string
-        minLength: 0
+        minLength: 1
         maxLength: 70
         description: Town
     title: Address
@@ -1778,8 +1858,6 @@ definitions:
     properties:
       authorization:
         type: string
-        minLength: 0
-        maxLength: 32
         enum:
           - CHECK_BOX
           - SMS_PASSWORD
@@ -1794,8 +1872,6 @@ definitions:
         $ref: '#/definitions/ConfigurationBranding'
       debtorCommunication:
         type: string
-        minLength: 0
-        maxLength: 32
         enum:
           - EMAIL
           - NONE
@@ -1818,7 +1894,6 @@ definitions:
           Note: Used only if you use the Nuapay E-Mandates GUI.
       emailDomain:
         type: string
-        minLength: 0
         maxLength: 255
         description: |-
           Domain name for e-mails issued by the E-Mandate solution.
@@ -1828,7 +1903,6 @@ definitions:
           Note: It must be configured if you use your own E-Mandate GUI.
       emailUrl:
         type: string
-        minLength: 0
         maxLength: 255
         description: |-
           URL for pages linked to in e-mails issued by the E-Mandate solution.
@@ -1838,7 +1912,6 @@ definitions:
           Note: It must be configured if you use your own E-Mandate GUI.
       failureUrl:
         type: string
-        minLength: 0
         maxLength: 2048
         pattern: ^((?!\<|\>).)*$
         description: URL which will be used when sending http redirect action after process fails.
@@ -1846,26 +1919,21 @@ definitions:
         $ref: '#/definitions/HiddenFieldsRequest'
       logo:
         type: string
-        minLength: 0
         maxLength: 2048
         pattern: ^((?!\<|\>).)*$
         description: URL for Logo image.
       mandateSignedEmail:
         type: string
-        minLength: 0
         maxLength: 254
         pattern: .*@.*
         description: An e-mail address for E-mail notification to you (the merchant) after the payer signs an E-Mandate.
       successUrl:
         type: string
-        minLength: 0
         maxLength: 2048
         pattern: ^((?!\<|\>).)*$
         description: URL which will be used when sending http redirect action after process succeeds.
       thirdPartySigning:
         type: string
-        minLength: 0
-        maxLength: 32
         enum:
           - UNCERTIFIED
           - MORPHO
@@ -2040,9 +2108,9 @@ definitions:
         description: Uri of requested resource.
     title: ConfirmMandateGetResponseEnvelope
     example:
-      uri: /conversations/conversations/confirm
+      uri: /conversations/confirm
       data:
-        uri: /conversations/conversations/confirm
+        uri: /conversations/confirm
         debtorEmail: debtor@email.com
         debtorMobileNumber: 35312312312
         merchantDetails:
@@ -2096,16 +2164,16 @@ definitions:
         description: Uri of requested resource.
     title: ConfirmMandatePostResponseEnvelope
     example:
-      uri: /conversations/conversations/confirm
+      uri: /conversations/confirm
       data:
-        uri: /conversations/conversations/confirm
+        uri: /conversations/confirm
         mandateInfo:
           encodedMandateId: 8ow24y2pdx
           encodedSchemeId: 8ow24y2pdx
           mandateId: 1234567899
           signed: true
         views:
-          - href: https://api.nuapay.com/conversations/conversations/document
+          - href: https://api.nuapay.com/conversations/document
             rel: Document
         links: []
   ContractDetailsResponse:
@@ -2218,7 +2286,7 @@ definitions:
     properties:
       accountCountry:
         type: string
-        minLength: 0
+        minLength: 2
         maxLength: 2
         description: Domestic Account Country. 2 letter ISO country code
       address:
@@ -2229,27 +2297,22 @@ definitions:
         description: Account BIC
       domesticAccountNumber:
         type: string
-        minLength: 0
         maxLength: 20
         description: Domestic Account Number
       domesticBankCode:
         type: string
-        minLength: 0
         maxLength: 10
         description: Domestic Bank Code
       domesticBranchCode:
         type: string
-        minLength: 0
         maxLength: 10
         description: Domestic Branch Code
       domesticCheckSum:
         type: string
-        minLength: 0
         maxLength: 2
         description: Domestic Check Sum
       email:
         type: string
-        minLength: 0
         maxLength: 254
         pattern: .*@.*
         description: Debtor Email Address
@@ -2264,7 +2327,7 @@ definitions:
         description: Debtor Mobile Number
       name:
         type: string
-        minLength: 0
+        minLength: 1
         maxLength: 70
         description: Debtor Name
     title: DebtorDetails
@@ -2342,10 +2405,10 @@ definitions:
           $ref: '#/definitions/ErrorDetail'
       returnCode:
         type: string
-        description:
+        description: Holds error code
       returnDescription:
         type: string
-        description:
+        description: Holds error description
     title: ErrorResponse
   HiddenFieldsRequest:
     type: object
@@ -2398,16 +2461,14 @@ definitions:
         description: Uri of requested resource.
     title: InitGetResponseEnvelope
     example:
-      uri: /conversations/conversations/init
+      uri: /conversations/init
       data:
-        uri: /conversations/conversations/init
+        uri: /conversations/init
         views:
-          - href: https://api.nuapay.com/conversations/conversations/sign
+          - href: https://api.nuapay.com/conversations/sign
             rel: Sign
-            templated: null
-          - href: https://api.nuapay.com/conversations/conversations/contract
+          - href: https://api.nuapay.com/conversations/contract
             rel: Contract
-            templated: null
         links: []
   Link:
     type: object
@@ -2426,9 +2487,6 @@ definitions:
           attribute: true
           wrapped: false
         description: Uri of next available view.
-      templated:
-        type: boolean
-        description: To be defined.
     title: Link
     xml:
       name: link
@@ -2466,18 +2524,15 @@ definitions:
         description: Merchant's contract Id.
       contractReference:
         type: string
-        minLength: 0
         maxLength: 35
         pattern: ^[0-9a-zA-Z\-\s]*$
         description: Contract reference.
       creditorSchemeId:
         type: string
-        minLength: 0
         maxLength: 35
         description: Merchant's creditor scheme id.
       domain:
         type: string
-        minLength: 0
         maxLength: 255
         description: Merchant's domain.
       iban:
@@ -2486,26 +2541,20 @@ definitions:
         description: Merchant's IBAN
       mandateId:
         type: string
-        minLength: 0
         maxLength: 35
         description: Mandate UMR.
       mandateType:
         type: string
-        minLength: 0
-        maxLength: 4
         enum:
           - OOFF
           - RCUR
         description: Mandate type.
       name:
         type: string
-        minLength: 0
         maxLength: 70
         description: Merchant name.
       schemeType:
         type: string
-        minLength: 0
-        maxLength: 4
         enum:
           - CORE
           - B2B
@@ -2546,9 +2595,8 @@ definitions:
         uri: /conversations/prepare/eAaFsksEPJNVrNIgQw-_7vRogVLZcOOgertmst8Eykbs3UwrdUsZUfMf6KFZ_wZhZfTUUZb1B70MIaI_gr-vLunA9CwpiO1aXsxYmrQ-X09sscSl1O1XEHGW8BU0avxxUf4Irr7DrXy2JkzMHIwAT-HsJjhFoU0WFqgUutkzyWTw9g
         token: 32b0fd59-b196-4501-bccb-56481dde69c6
         views:
-          - href: https://api.nuapay.com/conversations/conversations/verify
+          - href: https://api.nuapay.com/conversations/verify
             rel: Verify
-            templated: null
         links: []
   PrepareMandateRequest:
     type: object
@@ -2669,16 +2717,14 @@ definitions:
         description: URI of created resource.
     title: ResendPostResponseEnvelope
     example:
-      uri: /conversations/conversations/resend
+      uri: /conversations/resend
       data:
-        uri: /conversations/conversations/resend
+        uri: /conversations/resend
         views:
-          - href: https://api.nuapay.com/conversations/conversations/confirm
+          - href: https://api.nuapay.com/conversations/confirm
             rel: Confirm
-            templated: null
-          - href: https://api.nuapay.com/conversations/conversations/resend
+          - href: https://api.nuapay.com/conversations/resend
             rel: Resend
-            templated: null
         links: []
   RestResponseLink:
     type: object
@@ -2787,12 +2833,10 @@ definitions:
           emailNotification: false
           customerContact: false
         views:
-          - href: https://api.nuapay.com/conversations/conversations/sign
+          - href: https://api.nuapay.com/conversations/sign
             rel: Sign
-            templated: null
-          - href: https://api.nuapay.com/conversations/conversations/contract
+          - href: https://api.nuapay.com/conversations/contract
             rel: Contract
-            templated: null
         links: []
   SignMandateGetResponse:
     type: object
@@ -2819,9 +2863,9 @@ definitions:
         description: Uri of requested resource.
     title: SignMandateGetResponseEnvelope
     example:
-      uri: /conversations/conversations/sign
+      uri: /conversations/sign
       data:
-        uri: /conversations/conversations/sign
+        uri: /conversations/sign
         debtorDetails:
           name: Debtor Name
           mobileNumber: 35312312312
@@ -2863,7 +2907,6 @@ definitions:
         description: Declaration of mandate being acceptance.
       contractReference:
         type: string
-        minLength: 0
         maxLength: 35
         pattern: ^[0-9a-zA-Z\-\s]*$
         description: Contract reference.
@@ -2913,18 +2956,17 @@ definitions:
         description: Uri of requested resource.
     title: SignMandatePostResponseEnvelope
     example:
-      uri: /conversations/conversations/sign
+      uri: /conversations/sign
       data:
-        uri: /conversations/conversations/sign
+        uri: /conversations/sign
         mandateInfo:
           encodedMandateId: 8ow24y2pdx
           encodedSchemeId: 8ow24y2pdx
           mandateId: 1234567899
           signed: true
         views:
-          - href: https://api.nuapay.com/conversations/conversations/document
+          - href: https://api.nuapay.com/conversations/document
             rel: Document
-            templated: null
         links: []
   VerifyGetResponse:
     type: object
@@ -2952,9 +2994,9 @@ definitions:
         description: Uri of requested resource.
     title: VerifyGetResponseEnvelope
     example:
-      uri: /conversations/conversations/verify
+      uri: /conversations/verify
       data:
-        uri: /conversations/conversations/verify
+        uri: /conversations/verify
         debtorEmail: debtor@email.com
         merchantDetails:
           name: Creditor Name
@@ -3010,29 +3052,17 @@ definitions:
         description: Uri of requested resource.
     title: VerifyPostResponseEnvelope
     example:
-      uri: /conversations/conversations/verify
+      uri: /conversations/verify
       data:
-        uri: /conversations/conversations/verify
+        uri: /conversations/verify
         mandateInfo:
           encodedMandateId: 8ow24y2pdx
           encodedSchemeId: 8ow24y2pdx
           mandateId: 1234567899
           signed: false
         views:
-          - href: https://api.nuapay.com/conversations/conversations/sign
+          - href: https://api.nuapay.com/conversations/sign
             rel: Sign
-            templated: null
-          - href: https://api.nuapay.com/conversations/conversations/contract
+          - href: https://api.nuapay.com/conversations/contract
             rel: Contract
-            templated: null
         links: []
-  RestResponseEnvelopeInnerOfVoid:
-    type: object
-    properties:
-      links:
-        type: array
-        items:
-          $ref: '#/definitions/EmptyDataResponse'
-      uri:
-        type: string
-        description: Uri of requested resource.
