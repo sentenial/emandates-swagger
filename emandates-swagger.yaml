@@ -2630,24 +2630,6 @@ definitions:
           town: Town
           postCode: 123123
           country: IE
-      mandateSignedEmail:
-        type: string
-        description: An e-mail address for E-mail notification to you (the merchant) after the payer signs an E-Mandate.
-      successUrl:
-        type: string
-        description: URL which will be used when sending http redirect action after process succeeds.
-      thirdPartySigning:
-        type: string
-        enum:
-          - UNCERTIFIED
-          - MORPHO
-        description: Determines what certification method has been configured for this debtor.
-      uri:
-        type: string
-        description: Uri of requested resource.
-      whiteLabelled:
-        type: boolean
-        description: UI white labeled.
   PrepareMandateResponse:
     type: object
     properties:
